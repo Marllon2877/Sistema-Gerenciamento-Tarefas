@@ -1,252 +1,46 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+Minha Explicação:
 
-#define ARQUIVO "tarefas.txt"
 
-typedef struct No {
-    char tarefa[100];
-    struct No *next;
-} No;
+Este projeto foi desenvolvido em linguagem C utilizando estruturas de dados encadeadas. O objetivo do sistema é permitir que o usuário adicione tarefas, visualize tarefas pendentes, conclua tarefas e desfaça a última conclusão realizada.
 
-typedef struct {
-    No *front;
-    No *rear;
-} Fila;
+Para desenvolver o sistema foram utilizadas duas estruturas de dados: Fila e Pilha.
 
-typedef struct {
-    No *top;
-} Pilha;
+A fila foi utilizada para armazenar as tarefas pendentes. A escolha da fila faz sentido porque as tarefas devem ser executadas na mesma ordem em que foram cadastradas. Esse comportamento segue o conceito FIFO (First In, First Out), ou seja, o primeiro elemento que entra é o primeiro a sair.
 
+A pilha foi utilizada para armazenar o histórico das tarefas concluídas. Isso permite que o usuário possa desfazer a última conclusão realizada. A pilha segue o conceito LIFO (Last In, First Out), onde o último elemento inserido é o primeiro a ser removido.
 
+No início do código são utilizadas as bibliotecas stdio.h, stdlib.h e string.h. A biblioteca stdio.h é utilizada para funções de entrada e saída como printf, scanf, fopen e fclose. A biblioteca stdlib.h é utilizada para funções relacionadas à memória, como malloc e free. Já a string.h é utilizada para manipulação de textos através de funções como strcpy.
 
-void inicializarFila(Fila *fila) {
-    fila->front = NULL;
-    fila->rear = NULL;
-}
+A linha "#define ARQUIVO "tarefas.txt"" cria uma constante que armazena o nome do arquivo utilizado para salvar e carregar os dados do sistema. Dessa forma, caso seja necessário alterar o nome do arquivo, basta modificar apenas essa linha.
 
-void enqueue(Fila *fila, char tarefa[]) {
-    No *novo = (No *)malloc(sizeof(No));
+A estrutura No representa cada nó da lista encadeada. Cada nó possui um campo chamado tarefa, responsável por armazenar o texto da tarefa, e um ponteiro chamado next, que guarda o endereço do próximo nó da estrutura.
 
-    strcpy(novo->tarefa, tarefa);
-    novo->next = NULL;
+A estrutura Fila possui dois ponteiros: front e rear. O ponteiro front aponta para o primeiro elemento da fila e o ponteiro rear aponta para o último elemento.
 
-    if (fila->rear == NULL) {
-        fila->front = novo;
-        fila->rear = novo;
-    } else {
-        fila->rear->next = novo;
-        fila->rear = novo;
-    }
-}
+A estrutura Pilha possui apenas um ponteiro chamado top, que aponta para o elemento localizado no topo da pilha.
 
-int dequeue(Fila *fila, char tarefa[]) {
-    if (fila->front == NULL)
-        return 0;
+A função inicializarFila é responsável por criar uma fila vazia, atribuindo NULL aos ponteiros front e rear. Da mesma forma, a função inicializarPilha cria uma pilha vazia atribuindo NULL ao ponteiro top.
 
-    No *temp = fila->front;
+A função enqueue é utilizada para inserir uma nova tarefa na fila. Primeiro é criado um novo nó utilizando malloc. Em seguida, o texto da tarefa é copiado para o nó utilizando strcpy. Caso a fila esteja vazia, o novo nó passa a ser o primeiro e o último elemento. Caso contrário, o novo nó é adicionado ao final da fila.
 
-    strcpy(tarefa, temp->tarefa);
+A função dequeue é responsável por remover a primeira tarefa da fila. Ela salva temporariamente o primeiro nó, copia o conteúdo para uma variável auxiliar, move o ponteiro front para o próximo elemento e libera a memória ocupada pelo nó removido através da função free.
 
-    fila->front = fila->front->next;
+A função push é utilizada para inserir elementos na pilha. Um novo nó é criado e ligado ao topo atual da pilha. Em seguida, esse novo nó passa a ser o novo topo.
 
-    if (fila->front == NULL)
-        fila->rear = NULL;
+A função pop remove o elemento que está no topo da pilha. O topo atual é armazenado temporariamente, o ponteiro top passa a apontar para o próximo elemento e a memória utilizada pelo nó removido é liberada.
 
-    free(temp);
+A função listarTarefas percorre toda a fila utilizando um ponteiro auxiliar e exibe cada tarefa cadastrada pelo usuário.
 
-    return 1;
-}
+A função salvarArquivo grava todas as tarefas pendentes em um arquivo chamado tarefas.txt. Para isso, ela percorre toda a fila e escreve cada tarefa em uma linha do arquivo.
 
+A função carregarArquivo é executada quando o programa inicia. Ela abre o arquivo tarefas.txt, lê cada linha e utiliza a função enqueue para reconstruir a fila na memória. Dessa forma, as tarefas permanecem disponíveis mesmo após o encerramento do programa.
 
+Na função main são criadas as estruturas fila e histórico. Em seguida, elas são inicializadas e os dados salvos anteriormente são carregados do arquivo.
 
-void inicializarPilha(Pilha *pilha) {
-    pilha->top = NULL;
-}
+O programa apresenta um menu interativo contendo as opções de adicionar tarefa, listar tarefas, concluir tarefa, desfazer conclusão, salvar e sair. Após executar qualquer operação, o sistema retorna ao menu principal até que o usuário escolha a opção de sair.
 
-void push(Pilha *pilha, char tarefa[]) {
-    No *novo = (No *)malloc(sizeof(No));
+Quando uma tarefa é concluída, ela é removida da fila através da função dequeue e adicionada à pilha utilizando a função push. Quando o usuário escolhe desfazer a última conclusão, a tarefa é removida da pilha utilizando a função pop e adicionada novamente à fila utilizando a função enqueue.
 
-    strcpy(novo->tarefa, tarefa);
+Ao encerrar o programa, as tarefas pendentes são salvas automaticamente no arquivo para que possam ser recuperadas na próxima execução.
 
-    novo->next = pilha->top;
-    pilha->top = novo;
-}
-
-int pop(Pilha *pilha, char tarefa[]) {
-    if (pilha->top == NULL)
-        return 0;
-
-    No *temp = pilha->top;
-
-    strcpy(tarefa, temp->tarefa);
-
-    pilha->top = pilha->top->next;
-
-    free(temp);
-
-    return 1;
-}
-
-
-
-void listarTarefas(Fila *fila) {
-    No *aux = fila->front;
-
-    if (aux == NULL) {
-        printf("\nNenhuma tarefa pendente.\n");
-        return;
-    }
-
-    printf("\n=== TAREFAS PENDENTES ===\n");
-
-    while (aux != NULL) {
-        printf("- %s\n", aux->tarefa);
-        aux = aux->next;
-    }
-}
-
-
-
-void salvarArquivo(Fila *fila) {
-    FILE *fp = fopen(ARQUIVO, "w");
-
-    if (fp == NULL)
-        return;
-
-    No *aux = fila->front;
-
-    while (aux != NULL) {
-        fprintf(fp, "%s\n", aux->tarefa);
-        aux = aux->next;
-    }
-
-    fclose(fp);
-}
-
-void carregarArquivo(Fila *fila) {
-    FILE *fp = fopen(ARQUIVO, "r");
-
-    if (fp == NULL)
-        return;
-
-    char tarefa[100];
-
-    while (fgets(tarefa, sizeof(tarefa), fp)) {
-
-        tarefa[strcspn(tarefa, "\n")] = '\0';
-
-        enqueue(fila, tarefa);
-    }
-
-    fclose(fp);
-}
-
-
-int main() {
-
-    Fila fila;
-    Pilha historico;
-
-    inicializarFila(&fila);
-    inicializarPilha(&historico);
-
-    carregarArquivo(&fila);
-
-    int opcao;
-    char tarefa[100];
-
-    do {
-
-        printf("\n=== SISTEMA DE GERENCIAMENTO DE TAREFAS ===\n");
-        printf("1 - Adicionar tarefa\n");
-        printf("2 - Listar tarefas pendentes\n");
-        printf("3 - Concluir proxima tarefa\n");
-        printf("4 - Desfazer ultima conclusao\n");
-        printf("5 - Salvar\n");
-        printf("6 - Sair\n");
-        printf("Escolha: ");
-        scanf("%d", &opcao);
-
-        getchar();
-
-        switch(opcao) {
-
-            case 1:
-
-                printf("Digite a tarefa: ");
-                fgets(tarefa, sizeof(tarefa), stdin);
-
-                tarefa[strcspn(tarefa, "\n")] = '\0';
-
-                enqueue(&fila, tarefa);
-
-                printf("Tarefa adicionada.\n");
-
-                break;
-
-            case 2:
-
-                listarTarefas(&fila);
-
-                break;
-
-            case 3:
-
-                if (dequeue(&fila, tarefa)) {
-
-                    push(&historico, tarefa);
-
-                    printf("Tarefa concluida: %s\n", tarefa);
-
-                } else {
-
-                    printf("Fila vazia.\n");
-
-                }
-
-                break;
-
-            case 4:
-
-                if (pop(&historico, tarefa)) {
-
-                    enqueue(&fila, tarefa);
-
-                    printf("Conclusao desfeita: %s\n", tarefa);
-
-                } else {
-
-                    printf("Nenhuma tarefa para desfazer.\n");
-
-                }
-
-                break;
-
-            case 5:
-
-                salvarArquivo(&fila);
-
-                printf("Dados salvos.\n");
-
-                break;
-
-            case 6:
-
-                salvarArquivo(&fila);
-
-                printf("Encerrando...\n");
-
-                break;
-
-            default:
-
-                printf("Opcao invalida.\n");
-        }
-
-    } while(opcao != 6);
-
-    return 0;
-}
-
-
+Este projeto permitiu aplicar na prática os conceitos de listas encadeadas, filas, pilhas, alocação dinâmica de memória, manipulação de arquivos e organização de código em linguagem C para resolver um problema real de forma simples e funcional.
